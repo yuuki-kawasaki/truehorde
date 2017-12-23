@@ -20,9 +20,21 @@ def loktarogar(event, context):
         logger.error(e)
         return 'get_balance error!'
 
-    return balance_json
+    try:
+        ticker_json = get_ticker()
+    except Exception as e:
+        logger.error(e)
+        return 'get_ticker error!'
+
+
+    return ticker_json
 
 def get_balance(coincheck):
     path_balance = '/api/accounts/balance'
     result = coincheck.get(path_balance)
+    return result
+
+def get_ticker():
+    path_ticker = 'https://coincheck.com/api/ticker'
+    result = requests.get(path_ticker).json()
     return result
