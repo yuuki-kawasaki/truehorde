@@ -1,5 +1,6 @@
 import json
 import os
+import time
 import decimal
 import logging
 import requests
@@ -49,16 +50,21 @@ def loktarogar(event, context):
                 return 'bid_wait error!'
         else:
             print('終値が前回のレートより高いので、買います')
-            amount = int(balance['jpy']) - 1
+            amount = int(float(balance['jpy'])) - 1
             if amount > 0:
                 try:
+                    time.sleep(1)
                     result = market_buy(coincheck, amount)
                     print('ロクターオガー！')
+                    print(json.dumps(result))
                 except Exception as e:
                     logger.error(e)
                     return 'market_buy error!'
                 try:
-                    agreed_rate = get_agreed_rate(coincheck)
+                    time.sleep(1)
+                    transactions = get_agreed_rate(coincheck)
+                    agreed_rate = int(float(transactions['transactions'][0]['rate']))
+                    print('前回: ' + str(last_trade['rate']) + ' 今回: ' + str(agreed_rate) + ' で、約定したぞ！')
                 except Exception as e:
                     logger.error(e)
                     return 'get_agreed_rate error!'
@@ -106,7 +112,7 @@ def market_buy(coincheck, amount):
 def get_agreed_rate(coincheck):
     path_transactions = '/api/exchange/orders/transactions'
     result = coincheck.get(path_transactions)
-    return int(float(result['transactions'][0]['rate']))
+    return result
 
 # Helper class to convert a DynamoDB item to JSON.
 class DecimalEncoder(json.JSONEncoder):
