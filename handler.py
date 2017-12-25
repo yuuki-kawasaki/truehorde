@@ -81,7 +81,24 @@ def loktarogar(event, context):
                 last_trade = 'no money...'
                 print('金が足りない！！')
     else:
-        last_trade = 'pass'
+        print('前回取引が買いの為、売りを伺います')
+        if balance['btc'] > 0.005:
+            if ticker['last'] <= last_trade['losscut']:
+                print('終値が損切り閾値より低いので、損切りします')
+                try:
+                    time.sleep(1)
+                    result = market_sell(coincheck, balance['btc'])
+                    print('俺は死を選ぶぞ！')
+                    print(json.dumps(result))
+                except Exception as e:
+                    logger.error(e)
+                    return 'market_sell(losscut) error!'
+            else:
+                pass
+        else:
+            last_trade = 'no coin...'
+            print('コインが最低取引量に足りない！！')
+        
 
     return last_trade
 
@@ -107,6 +124,16 @@ def market_buy(coincheck, amount):
         'market_buy_amount': amount
     }
     result = coincheck.post(path_market_buy, params)
+    return result
+
+def market_sell(coincheck, amount):
+    path_market_sell = '/api/exchange/orders'
+    params = {
+        'pair': 'btc_jpy',
+        'order_type': 'market_sell',
+        'market_buy_amount': amount
+    }
+    result = coincheck.post(path_market_sell, params)
     return result
 
 def get_agreed_rate(coincheck):
